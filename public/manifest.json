@@ -1,0 +1,38 @@
+{
+  "name": "ALVA Rent — Portal do Inquilino",
+  "short_name": "ALVA Rent",
+  "description": "Acompanhe seus boletos e contratos do Grupo MERCK",
+  "start_url": "/portal",
+  "scope": "/portal",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0E1E3A",
+  "theme_color": "#0E1E3A",
+  "lang": "pt-BR",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Próximo boleto",
+      "url": "/portal/boletos/proximo",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Abrir chamado",
+      "url": "/portal/chamados/novo",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}
