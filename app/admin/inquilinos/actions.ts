@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { enviarAcessoPortal as enviarAcessoPortalCore } from '@/lib/portal-acesso';
 import { inquilinoSchema } from './schema';
 
 type Result = { ok: true } | { ok: false; error: string; fieldErrors?: Record<string, string[]> };
@@ -41,6 +42,13 @@ export async function atualizarInquilino(
   revalidatePath('/admin/inquilinos');
   revalidatePath(`/admin/inquilinos/${id}`);
   redirect('/admin/inquilinos');
+}
+
+export async function enviarAcessoPortal(inquilinoId: string) {
+  const result = await enviarAcessoPortalCore({ inquilinoId });
+  revalidatePath(`/admin/inquilinos/${inquilinoId}/editar`);
+  revalidatePath('/admin/contratos', 'layout');
+  return result;
 }
 
 export async function excluirInquilino(id: string): Promise<Result> {

@@ -6,6 +6,7 @@ import { brl, formatDate, formatCpf } from '@/lib/utils';
 import { DeleteButton } from '../delete-button';
 import { UploadForm } from './arquivos/upload-form';
 import { FileRow } from './arquivos/file-row';
+import { EnviarAcessoButton } from '../../inquilinos/enviar-acesso-button';
 
 export const metadata = { title: 'Detalhe do contrato' };
 export const dynamic = 'force-dynamic';
@@ -37,7 +38,7 @@ export default async function ContratoDetalhePage({
     .select(`
       *,
       imovel:imoveis (id, codigo, endereco, numero, bairro, cidade, uf),
-      inquilino:inquilinos (id, nome, cpf, email, whatsapp)
+      inquilino:inquilinos (id, nome, cpf, email, whatsapp, user_id)
     `)
     .eq('id', params.id)
     .maybeSingle();
@@ -98,6 +99,28 @@ export default async function ContratoDetalhePage({
           <div className="text-xs font-mono">{formatCpf(contrato.inquilino?.cpf ?? '')}</div>
           {contrato.inquilino?.email && <div className="text-xs text-ink-500">{contrato.inquilino.email}</div>}
           {contrato.inquilino?.whatsapp && <div className="text-xs text-ink-500">{contrato.inquilino.whatsapp}</div>}
+          <div className="mt-2 pt-2 border-t border-navy-50">
+            {contrato.inquilino?.user_id ? (
+              <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                ● Portal ativo
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
+                ● Sem acesso ao portal
+              </span>
+            )}
+            {contrato.inquilino && (
+              <div className="mt-2">
+                <EnviarAcessoButton
+                  inquilinoId={contrato.inquilino.id}
+                  jaTemAcesso={!!contrato.inquilino.user_id}
+                  temEmail={!!contrato.inquilino.email}
+                  size="sm"
+                  variant={contrato.inquilino.user_id ? 'outline' : 'primary'}
+                />
+              </div>
+            )}
+          </div>
         </Card>
 
         <Card label="Mensalidade">
