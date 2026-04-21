@@ -1,7 +1,8 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
-import { formatDate } from '@/lib/utils';
+import { createAdminClient } from '@/lib/supabase/admin';
+import { formatDateTime } from '@/lib/utils';
 import { abrirChamadoManutencao } from './actions';
 
 export const metadata = { title: 'Manutenção' };
@@ -24,7 +25,6 @@ export default async function ManutencaoPage({
 
   if (!inquilino) redirect('/portal');
 
-  // Contrato ativo
   const { data: contrato } = await supabase
     .from('contratos')
     .select('id, imovel_id, imovel:imoveis(codigo, endereco)')
@@ -33,15 +33,16 @@ export default async function ManutencaoPage({
     .limit(1)
     .maybeSingle();
 
-  // Chamados anteriores (filtrados por imóvel do contrato)
+  // Lê via admin client (evita qualquer pegadinha de RLS no SELECT)
+  const admin = createAdminClient();
   const { data: chamados } = contrato?.imovel_id
-    ? await supabase
+    ? await admin
         .from('manutencoes')
-        .select('id, titulo, tipo, prioridade, status, aberta_em, resolvida_em')
+        .select('id, titulo, tipo, prioridade, status, aberta_em, resolvida_em, fotos')
         .eq('imovel_id', contrato.imovel_id)
         .eq('origem', 'hospede')
         .order('aberta_em', { ascending: false })
-        .limit(10)
+        .limit(20)
     : { data: [] };
 
   return (
@@ -57,7 +58,7 @@ export default async function ManutencaoPage({
       <div className="px-5 py-4 space-y-4">
         {searchParams.ok && (
           <div className="bg-emerald-50 border border-emerald-200 text-emerald-900 text-sm rounded-lg p-3">
-            ✅ Chamado aberto! Acompanhe o andamento abaixo.
+            ✅ Chamado aberto! Veja o acompanhamento abaixo.
           </div>
         )}
         {searchParams.erro && (
@@ -69,6 +70,7 @@ export default async function ManutencaoPage({
         {contrato ? (
           <form
             action={abrirChamadoManutencao}
+            encType="multipart/form-data"
             className="bg-white rounded-xl p-4 border border-navy-100 space-y-3"
           >
             <input type="hidden" name="imovel_id" value={contrato.imovel_id} />
@@ -111,6 +113,24 @@ export default async function ManutencaoPage({
                 <option value="urgente">Urgente — emergência</option>
               </select>
             </div>
+            <div>
+              <label className="text-xs font-semibold text-ink-500 uppercase tracking-wider block mb-1">
+                Fotos <span className="text-ink-400 normal-case font-normal">(opcional, até 5)</span>
+              </label>
+              <input
+                type="file"
+                name="fotos"
+                multiple
+                accept="image/*"
+                className="w-full text-sm text-ink-600
+                  file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0
+                  file:bg-navy-900 file:text-white file:text-xs file:font-semibold
+                  file:hover:bg-navy-800 file:cursor-pointer"
+              />
+              <p className="text-[10px] text-ink-400 mt-1">
+                Ajuda muito a gente entender o problema. Máximo 10MB por foto.
+              </p>
+            </div>
             <button
               type="submit"
               className="w-full bg-navy-900 text-white py-2.5 rounded-xl font-semibold text-sm hover:bg-navy-800 transition"
@@ -127,21 +147,44 @@ export default async function ManutencaoPage({
         {chamados && chamados.length > 0 && (
           <div>
             <div className="text-xs uppercase font-semibold text-ink-400 tracking-wider mb-2 px-1">
-              Meus chamados
+              Meus chamados ({chamados.length})
             </div>
-            <div className="bg-white rounded-xl border border-navy-100 divide-y divide-navy-50">
-              {chamados.map((c) => (
-                <div key={c.id} className="p-3">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="font-semibold text-navy-900 text-sm">{c.titulo}</div>
-                    <StatusBadge status={c.status} />
+            <div className="bg-white rounded-xl border border-navy-100 divide-y divide-navy-50 overflow-hidden">
+              {chamados.map((c) => {
+                const fotos = Array.isArray(c.fotos) ? (c.fotos as string[]) : [];
+                return (
+                  <div key={c.id} className="p-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="font-semibold text-navy-900 text-sm">{c.titulo}</div>
+                      <StatusBadge status={c.status} />
+                    </div>
+                    <div className="text-[11px] text-ink-500 mt-1">
+                      {c.tipo} · {c.prioridade} · aberto em {formatDateTime(c.aberta_em)}
+                      {c.resolvida_em && ` · resolvido ${formatDateTime(c.resolvida_em)}`}
+                    </div>
+                    {fotos.length > 0 && (
+                      <div className="flex gap-1 mt-2 overflow-x-auto">
+                        {fotos.map((url, i) => (
+                          <a
+                            key={i}
+                            href={url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex-shrink-0"
+                          >
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={url}
+                              alt={`Foto ${i + 1}`}
+                              className="h-16 w-16 object-cover rounded-lg border border-navy-100"
+                            />
+                          </a>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                  <div className="text-[11px] text-ink-500 mt-1">
-                    {c.tipo} · {c.prioridade} · aberto em {formatDate(c.aberta_em)}
-                    {c.resolvida_em && ` · resolvido ${formatDate(c.resolvida_em)}`}
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}

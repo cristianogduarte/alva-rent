@@ -15,11 +15,25 @@ export function brl(value: number | null | undefined): string {
   });
 }
 
-/** "2026-04-18" -> "18/04/2026" */
+/** "2026-04-18" -> "18/04/2026" (America/Sao_Paulo) */
 export function formatDate(iso: string | Date | null | undefined): string {
   if (!iso) return '—';
   const d = typeof iso === 'string' ? new Date(iso) : iso;
-  return d.toLocaleDateString('pt-BR');
+  return d.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+}
+
+/** "2026-04-18T14:30Z" -> "18/04/2026 11:30" (America/Sao_Paulo) */
+export function formatDateTime(iso: string | Date | null | undefined): string {
+  if (!iso) return '—';
+  const d = typeof iso === 'string' ? new Date(iso) : iso;
+  return d.toLocaleString('pt-BR', {
+    timeZone: 'America/Sao_Paulo',
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
 }
 
 /** Formata CPF/CNPJ */

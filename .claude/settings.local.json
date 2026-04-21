@@ -62,7 +62,8 @@
       "Bash(powershell -Command \"cd 'C:\\\\Users\\\\crist\\\\ALVA RENT'; Get-Content supabase\\\\migrations\\\\20260419000000_short_stay_foundation.sql | Select-String -Pattern 'create table|^  \\([a-z_]+\\)\\\\s' | Select-Object -First 80\")",
       "Bash(/c/Users/crist/scoop/shims/pnpm.exe build *)",
       "Bash(/c/Users/crist/scoop/shims/pnpm.exe dev *)",
-      "Bash(npx next *)"
+      "Bash(npx next *)",
+      "Bash(npx supabase *)"
     ]
   }
 }
